@@ -44,6 +44,14 @@ module.exports = appInfo => {
     },
   };
 
+  // 允許 Egg.js 監聽所有網卡的 IP
+  config.cluster = {
+    listen: {
+      port: 7001, // 你的服務埠號
+      hostname: '0.0.0.0', // 允許所有設備連接（內網 & 外網）
+    },
+  };
+
   // add your user config here
   const userConfig = {
     // myAppName: 'egg',
