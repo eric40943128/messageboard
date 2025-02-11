@@ -7,6 +7,7 @@ class AdminController extends Controller {
 
     if (password === 'admin123') {
       ctx.session.admin = true;
+      ctx.session.user = "user123";
       ctx.body = { success: true, message: '管理員登入成功' };
     } else {
       ctx.status = 401;
