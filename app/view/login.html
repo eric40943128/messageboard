@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登入</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container">
+    <h1 class="my-4">登入</h1>
+
+    <!-- 使用者登入表單 -->
+    <form id="userLoginForm">
+      <input type="text" id="userLoginUsername" class="form-control" placeholder="使用者名稱" required>
+      <input type="password" id="userLoginPassword" class="form-control mt-2" placeholder="密碼" required>
+      <button type="submit" class="btn btn-success mt-2">使用者登入</button>
+    </form>
+
+  <script>
+    let csrfToken = '';
+
+    // 取得 CSRF Token
+    function fetchCsrfToken() {
+      return fetch('/api/csrf')
+        .then(response => response.json())
+        .then(data => {
+          csrfToken = data.csrf;
+        });
+    }
+
+    // 先獲取 CSRF Token
+    fetchCsrfToken();
+
+    // 使用者登入
+    document.getElementById('userLoginForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+        body: JSON.stringify({
+          username: document.getElementById('userLoginUsername').value,
+          password: document.getElementById('userLoginPassword').value
+        })
+      }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('使用者登入成功');
+            window.location.href = '/';
+          } else {
+            alert('登入失敗，請檢查帳號或密碼');
+          }
+        });
+    });
+  </script>
+</body>
+</html>

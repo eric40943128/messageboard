@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>留言板</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center my-4">
+      <h1>留言板</h1>
+      <div>
+        <button id="adminBtn" class="btn btn-warning">管理員登入</button>
+        <button id="userLogoutBtn" class="btn btn-danger" style="display: none;">使用者登出</button> <!-- 新增登出按鈕 -->
+      </div>
+    </div>
+
+    <!-- 發表留言按鈕 -->
+    <button id="postMessageBtn" class="btn btn-primary">發表留言</button>
+
+    <!-- 留言列表 -->
+    <ul class="list-group mt-4" id="commentList"></ul>
+  </div>
+
+  <script>
+    let isAdmin = false;
+    let csrfToken = ''; // 存儲 CSRF Token
+
+    // 取得 CSRF Token
+    function fetchCsrfToken() {
+      return fetch('/api/csrf')
+        .then(response => response.json())
+        .then(data => {
+          csrfToken = data.csrf;
+        });
+    }
+
+    // 取得 CSRF Token
+    fetchCsrfToken();
+
+    // 檢查使用者登入狀態
+    fetch('/api/check-login')
+      .then(response => response.json())
+      .then(data => {
+        if (data.loggedIn) {
+          document.getElementById('userLogoutBtn').style.display = "inline-block"; // 顯示登出按鈕
+        }
+      });
+
+    // 檢查管理員登入狀態
+    fetch('/api/check-admin')
+      .then(response => response.json())
+      .then(data => {
+        isAdmin = data.isAdmin;
+        updateAdminButton();
+        loadComments();
+      });
+
+    // 更新管理員按鈕狀態
+    function updateAdminButton() {
+      const adminBtn = document.getElementById('adminBtn');
+      if (isAdmin) {
+        adminBtn.textContent = "管理員登出";
+        adminBtn.classList.remove("btn-warning");
+        adminBtn.classList.add("btn-danger");
+        adminBtn.onclick = adminLogout;
+      } else {
+        adminBtn.textContent = "管理員登入";
+        adminBtn.classList.remove("btn-danger");
+        adminBtn.classList.add("btn-warning");
+        adminBtn.onclick = adminLogin;
+      }
+    }
+
+    // 管理員登入
+    function adminLogin() {
+      const password = prompt('請輸入管理員密碼:');
+      fetch('/api/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+        body: JSON.stringify({ password })
+      }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('管理員登入成功');
+            location.reload();
+          } else {
+            alert('密碼錯誤');
+          }
+        });
+    }
+
+    // 管理員登出
+    function adminLogout() {
+      fetch('/api/admin-logout', {
+        method: 'POST',
+        headers: { 'x-csrf-token': csrfToken }
+      }).then(() => {
+        alert('管理員已登出');
+        location.reload();
+      });
+    }
+
+    // **使用者登出**
+    document.getElementById('userLogoutBtn').addEventListener('click', function() {
+      fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'x-csrf-token': csrfToken }
+      }).then(() => {
+        alert('使用者已登出');
+        location.reload();
+      });
+    });
+
+    // 發表留言按鈕
+    document.getElementById('postMessageBtn').addEventListener('click', function() {
+      // 檢查是否已登入
+      fetch('/api/check-login')
+        .then(response => response.json())
+        .then(data => {
+          if (!data.loggedIn) {
+            alert('請先登入！');
+            window.location.href = '/login';
+            return;
+          }
+
+          // 已登入，跳轉至發表留言頁面
+          window.location.href = '/post.html';
+        });
+    });
+
+    // 加載留言
+    function loadComments() {
+      fetch('/api/comments')
+        .then(response => response.json())
+        .then(comments => {
+          const commentList = document.getElementById('commentList');
+          commentList.innerHTML = '';
+
+          comments.forEach(comment => {
+            const li = document.createElement('li');
+            li.classList.add('list-group-item');
+            li.innerHTML = `
+              <strong>${comment.username}</strong> <small>${comment.datetime}</small>
+              <p>${comment.text}</p>
+              ${isAdmin ? `
+                <button onclick="editComment(${comment.id}, '${comment.text}')" class="btn btn-warning btn-sm">編輯</button>
+                <button onclick="deleteComment(${comment.id})" class="btn btn-danger btn-sm">刪除</button>
+              ` : ''}
+            `;
+            commentList.appendChild(li);
+          });
+        });
+    }
+
+    // 編輯留言（管理員權限）
+    function editComment(id, oldText) {
+      const newText = prompt('修改留言:', oldText);
+      if (newText) {
+        fetch(`/api/comments/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+          body: JSON.stringify({ text: newText })
+        }).then(() => location.reload());
+      }
+    }
+
+    // 刪除留言（管理員權限）
+    function deleteComment(id) {
+      if (confirm('確定要刪除這條留言嗎？')) {
+        fetch(`/api/comments/${id}`, {
+          method: 'DELETE',
+          headers: { 'x-csrf-token': csrfToken }
+        }).then(() => location.reload());
+      }
+    }
+  </script>
+</body>
+</html>

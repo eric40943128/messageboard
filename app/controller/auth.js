@@ -1,0 +1,14 @@
+const { Controller } = require('egg');
+
+class AuthController extends Controller {
+
+  async loginPage() {
+    await this.ctx.render('login.html'); // 渲染 login.html
+  }
+
+  async postPage() {
+    await this.ctx.render('post.html'); // 渲染發表留言頁面
+  }
+}
+
+module.exports = AuthController;
