@@ -15,49 +15,70 @@ class MessageController extends Controller {
 
   async create() {
     const { ctx } = this;
-    if (!ctx.session.user) {
+    if (!ctx.session.user && !ctx.session.admin) {
       ctx.status = 401;
       ctx.body = { error: '請先登入' };
       return;
     }
-
-    const { username, text } = ctx.request.body;
+  
+    const { text } = ctx.request.body;
+    let username = ctx.session.admin ? 'admin' : ctx.session.user; // ✅ 如果是管理員，強制設定 `admin`
+  
     if (!username || !text || text.trim() === '') {
       ctx.status = 400;
       ctx.body = { error: '留言內容不能為空' };
       return;
     }
-
+  
     await ctx.model.Message.create({ username, text, datetime: new Date() });
-    ctx.body = { message: '留言發表成功' };
+    ctx.body = { success: true, message: '留言發表成功' };
   }
 
+  // 修改留言（使用者只能修改自己的留言，管理員可修改所有留言）
   async update() {
     const { ctx } = this;
-    if (!ctx.session.admin) {
-      ctx.status = 403;
-      ctx.body = { error: '管理員權限不足' };
+    const { text } = ctx.request.body;
+    const commentId = ctx.params.id;
+
+    const comment = await ctx.model.Message.findByPk(commentId);
+    if (!comment) {
+      ctx.status = 404;
+      ctx.body = { error: '留言不存在' };
       return;
     }
 
-    const { id } = ctx.params;
-    const { text } = ctx.request.body;
-
-    await ctx.model.Message.update({ text, datetime: new Date() }, { where: { id } });
-    ctx.body = { message: '留言已更新' };
+    // 允許管理員修改所有留言，或使用者只能修改自己的留言
+    if (ctx.session.admin || ctx.session.user === comment.username) {
+      comment.text = text;
+      comment.datetime = new Date();
+      await comment.save();
+      ctx.body = { success: true, message: '留言已更新' };
+    } else {
+      ctx.status = 403;
+      ctx.body = { error: '您沒有權限修改此留言' };
+    }
   }
 
+    // 刪除留言（使用者只能刪除自己的留言，管理員可刪除所有留言）
   async delete() {
     const { ctx } = this;
-    if (!ctx.session.admin) {
-      ctx.status = 403;
-      ctx.body = { error: '管理員權限不足' };
+    const commentId = ctx.params.id;
+
+    const comment = await ctx.model.Message.findByPk(commentId);
+    if (!comment) {
+      ctx.status = 404;
+      ctx.body = { error: '留言不存在' };
       return;
     }
 
-    const { id } = ctx.params;
-    await ctx.model.Message.destroy({ where: { id } });
-    ctx.body = { message: '留言已刪除' };
+    // 允許管理員刪除所有留言，或使用者只能刪除自己的留言
+    if (ctx.session.admin || ctx.session.user === comment.username) {
+      await comment.destroy();
+      ctx.body = { success: true, message: '留言已刪除' };
+    } else {
+      ctx.status = 403;
+      ctx.body = { error: '您沒有權限刪除此留言' };
+    }
   }
 }
 

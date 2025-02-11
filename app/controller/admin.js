@@ -7,7 +7,12 @@ class AdminController extends Controller {
 
     if (password === 'admin123') {
       ctx.session.admin = true;
-      ctx.session.user = "user123";
+
+      // 若使用者已登入，保持該使用者名稱；否則設定為 "admin"
+      if (!ctx.session.user) {
+        ctx.session.user = "admin";
+      }
+
       ctx.body = { success: true, message: '管理員登入成功' };
     } else {
       ctx.status = 401;
@@ -17,6 +22,12 @@ class AdminController extends Controller {
 
   async logout() {
     const { ctx } = this;
+
+    // 如果當前使用者是 "admin"，則一併登出使用者
+    if (ctx.session.user === "admin") {
+      ctx.session.user = null;
+    }
+
     ctx.session.admin = false;
     ctx.body = { success: true, message: '管理員已登出' };
   }

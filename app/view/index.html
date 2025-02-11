@@ -25,8 +25,9 @@
 
   <script>
     let isAdmin = false;
-    let csrfToken = ''; // 存儲 CSRF Token
-
+    let csrfToken = ''; 
+    let currentUser = null;
+  
     // 取得 CSRF Token
     function fetchCsrfToken() {
       return fetch('/api/csrf')
@@ -35,28 +36,29 @@
           csrfToken = data.csrf;
         });
     }
-
-    // 取得 CSRF Token
+  
+    // 先獲取 CSRF Token
     fetchCsrfToken();
-
-    // 檢查使用者登入狀態
-    fetch('/api/check-login')
-      .then(response => response.json())
-      .then(data => {
-        if (data.loggedIn) {
-          document.getElementById('userLogoutBtn').style.display = "inline-block"; // 顯示登出按鈕
-        }
-      });
-
-    // 檢查管理員登入狀態
-    fetch('/api/check-admin')
-      .then(response => response.json())
-      .then(data => {
-        isAdmin = data.isAdmin;
-        updateAdminButton();
-        loadComments();
-      });
-
+  
+    // 檢查使用者登入狀態與管理員身份
+    function checkLoginStatus() {
+      fetch('/api/check-login')
+        .then(response => response.json())
+        .then(data => {
+          if (data.loggedIn) {
+            currentUser = data.username;
+            document.getElementById('userLogoutBtn').style.display = "inline-block";
+          }
+          return fetch('/api/check-admin');
+        })
+        .then(response => response.json())
+        .then(data => {
+          isAdmin = data.isAdmin; 
+          updateAdminButton();
+          loadComments(); 
+        });
+    }
+  
     // 更新管理員按鈕狀態
     function updateAdminButton() {
       const adminBtn = document.getElementById('adminBtn');
@@ -72,7 +74,7 @@
         adminBtn.onclick = adminLogin;
       }
     }
-
+  
     // 管理員登入
     function adminLogin() {
       const password = prompt('請輸入管理員密碼:');
@@ -90,7 +92,7 @@
           }
         });
     }
-
+  
     // 管理員登出
     function adminLogout() {
       fetch('/api/admin-logout', {
@@ -101,7 +103,7 @@
         location.reload();
       });
     }
-
+  
     // **使用者登出**
     document.getElementById('userLogoutBtn').addEventListener('click', function() {
       fetch('/api/logout', {
@@ -112,10 +114,9 @@
         location.reload();
       });
     });
-
+  
     // 發表留言按鈕
     document.getElementById('postMessageBtn').addEventListener('click', function() {
-      // 檢查是否已登入
       fetch('/api/check-login')
         .then(response => response.json())
         .then(data => {
@@ -124,12 +125,10 @@
             window.location.href = '/login';
             return;
           }
-
-          // 已登入，跳轉至發表留言頁面
           window.location.href = '/post.html';
         });
     });
-
+  
     // 加載留言
     function loadComments() {
       fetch('/api/comments')
@@ -137,14 +136,14 @@
         .then(comments => {
           const commentList = document.getElementById('commentList');
           commentList.innerHTML = '';
-
+  
           comments.forEach(comment => {
             const li = document.createElement('li');
             li.classList.add('list-group-item');
             li.innerHTML = `
               <strong>${comment.username}</strong> <small>${comment.datetime}</small>
               <p>${comment.text}</p>
-              ${isAdmin ? `
+              ${(isAdmin || currentUser === comment.username) ? ` 
                 <button onclick="editComment(${comment.id}, '${comment.text}')" class="btn btn-warning btn-sm">編輯</button>
                 <button onclick="deleteComment(${comment.id})" class="btn btn-danger btn-sm">刪除</button>
               ` : ''}
@@ -153,8 +152,8 @@
           });
         });
     }
-
-    // 編輯留言（管理員權限）
+  
+    // 編輯留言
     function editComment(id, oldText) {
       const newText = prompt('修改留言:', oldText);
       if (newText) {
@@ -162,19 +161,38 @@
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
           body: JSON.stringify({ text: newText })
-        }).then(() => location.reload());
+        }).then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('留言已更新');
+              location.reload();
+            } else {
+              alert(data.error || '留言更新失敗');
+            }
+          });
       }
     }
-
-    // 刪除留言（管理員權限）
+  
+    // 刪除留言
     function deleteComment(id) {
       if (confirm('確定要刪除這條留言嗎？')) {
         fetch(`/api/comments/${id}`, {
           method: 'DELETE',
           headers: { 'x-csrf-token': csrfToken }
-        }).then(() => location.reload());
+        }).then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('留言已刪除');
+              location.reload();
+            } else {
+              alert(data.error || '留言刪除失敗');
+            }
+          });
       }
     }
+  
+    // 初始化檢查登入狀態
+    checkLoginStatus();
   </script>
 </body>
 </html>
