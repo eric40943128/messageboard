@@ -26,6 +26,30 @@ class UserController extends Controller {
     const { ctx } = this;
     ctx.body = { loggedIn: !!ctx.session.user, username: ctx.session.user || null };
   }
+
+  async register() {
+    const { ctx } = this;
+    const { username, password } = ctx.request.body;
+  
+    if (!username || !password) {
+      ctx.status = 400;
+      ctx.body = { error: '帳號與密碼不得為空' };
+      return;
+    }
+  
+    // 檢查帳號是否已存在
+    const existingUser = await ctx.model.User.findOne({ where: { username } });
+    if (existingUser) {
+      ctx.status = 400;
+      ctx.body = { error: '該帳號已被註冊' };
+      return;
+    }
+  
+    // 創建新使用者
+    await ctx.model.User.create({ username, password });
+  
+    ctx.body = { success: true, message: '註冊成功' };
+  }
 }
 
 module.exports = UserController;

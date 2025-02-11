@@ -17,6 +17,9 @@
       <button type="submit" class="btn btn-success mt-2">使用者登入</button>
     </form>
 
+    <!-- 註冊按鈕 -->
+    <button id="registerBtn" class="btn btn-primary mt-2">註冊</button>
+
   <script>
     let csrfToken = '';
 
@@ -51,6 +54,11 @@
             alert('登入失敗，請檢查帳號或密碼');
           }
         });
+    });
+
+    // 點擊註冊後，跳轉至register.html
+    document.getElementById('registerBtn').addEventListener('click', function(){
+      window.location.href='/register';
     });
   </script>
 </body>
