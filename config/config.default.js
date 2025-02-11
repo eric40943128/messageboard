@@ -16,11 +16,11 @@ module.exports = appInfo => {
   // add your middleware config here
   config.middleware = [];
 
-  config.view ={
+  config.view = {
     mapping: {
       '.html': 'nunjucks',
     },
-  }
+  };
 
   config.session = {
     key: 'EGG_SESS',

@@ -4,12 +4,12 @@ const moment = require('moment');
 class MessageController extends Controller {
   async list() {
     const { ctx } = this;
-    const messages = await ctx.model.Message.findAll({ order: [['datetime', 'DESC']] });
+    const messages = await ctx.model.Message.findAll({ order: [[ 'datetime', 'DESC' ]] });
     ctx.body = messages.map(msg => ({
       id: msg.id,
       username: msg.username,
       text: msg.text,
-      datetime: moment(msg.datetime).utcOffset(8).format('YYYY-MM-DD HH:mm:ss')
+      datetime: moment(msg.datetime).utcOffset(8).format('YYYY-MM-DD HH:mm:ss'),
     }));
   }
 
@@ -20,16 +20,16 @@ class MessageController extends Controller {
       ctx.body = { error: '請先登入' };
       return;
     }
-  
+
     const { text } = ctx.request.body;
-    let username = ctx.session.admin ? 'admin' : ctx.session.user; // ✅ 如果是管理員，強制設定 `admin`
-  
+    const username = ctx.session.admin ? 'admin' : ctx.session.user; // ✅ 如果是管理員，強制設定 `admin`
+
     if (!username || !text || text.trim() === '') {
       ctx.status = 400;
       ctx.body = { error: '留言內容不能為空' };
       return;
     }
-  
+
     await ctx.model.Message.create({ username, text, datetime: new Date() });
     ctx.body = { success: true, message: '留言發表成功' };
   }
@@ -59,7 +59,7 @@ class MessageController extends Controller {
     }
   }
 
-    // 刪除留言（使用者只能刪除自己的留言，管理員可刪除所有留言）
+  // 刪除留言（使用者只能刪除自己的留言，管理員可刪除所有留言）
   async delete() {
     const { ctx } = this;
     const commentId = ctx.params.id;

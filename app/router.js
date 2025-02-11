@@ -11,7 +11,7 @@ module.exports = app => {
   router.get('/login', controller.auth.loginPage);
   router.get('/post.html', controller.auth.postPage);
 
-  //註冊請求及註冊頁面
+  // 註冊請求及註冊頁面
   router.get('/register', controller.auth.registerPage); // 渲染註冊頁面
   router.post('/api/register', controller.user.register); // 處理註冊請求
 
