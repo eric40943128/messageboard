@@ -8,19 +8,19 @@ module.exports = appInfo => {
    * built-in config
    * @type {Egg.EggAppConfig}
    **/
-  const config = exports = {};
+  const config = exports = {}
 
   // use for cookie sign key, should change to your own and keep security
-  config.keys = appInfo.name + '_1739002050624_3690';
+  config.keys = appInfo.name + '_1739002050624_3690'
 
   // add your middleware config here
-  config.middleware = [];
+  config.middleware = []
 
   config.view = {
     mapping: {
       '.html': 'nunjucks',
     },
-  };
+  }
 
   config.session = {
     key: 'EGG_SESS',
@@ -28,7 +28,7 @@ module.exports = appInfo => {
     httpOnly: true,
     encrypt: true,
     renew: true, // 讓 Session 重新產生，防止瀏覽器的舊 Cookie 保持登入
-  };
+  }
 
   // Sequelize 設定
   config.sequelize = {
@@ -42,7 +42,7 @@ module.exports = appInfo => {
       freezeTableName: true,
       timestamps: false,
     },
-  };
+  }
 
   // 允許 Egg.js 監聽所有網卡的 IP
   config.cluster = {
@@ -50,15 +50,15 @@ module.exports = appInfo => {
       port: 7001, // 你的服務埠號
       hostname: '0.0.0.0', // 允許所有設備連接（內網 & 外網）
     },
-  };
+  }
 
   // add your user config here
   const userConfig = {
     // myAppName: 'egg',
-  };
+  }
 
   return {
     ...config,
     ...userConfig,
-  };
-};
+  }
+}
