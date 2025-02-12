@@ -1,6 +1,7 @@
 {
   "name": "egg-messageboard",
   "version": "1.0.0",
+  "type": "module",
   "description": "messageboard",
   "private": true,
   "egg": {
@@ -15,10 +16,11 @@
     "mysql2": "^3.12.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
     "egg-bin": "6",
     "egg-mock": "5",
     "eslint": "8",
-    "eslint-config-egg": "13"
+    "eslint-config-egg": "^13.1.0"
   },
   "engines": {
     "node": ">=18.0.0"
