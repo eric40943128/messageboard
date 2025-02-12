@@ -1,12 +1,12 @@
-const { Controller } = require('egg');
+const { Controller } = require('egg')
 
 class CsrfController extends Controller {
   async getToken() {
-    const { ctx } = this;
+    const { ctx } = this
     ctx.body = {
       csrf: ctx.csrf, // 獲取 CSRF Token
-    };
+    }
   }
 }
 
-module.exports = CsrfController;
+module.exports = CsrfController
