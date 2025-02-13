@@ -34,8 +34,13 @@
     fetchCsrfToken();
 
     // 註冊請求
-    document.getElementById('registerForm').addEventListener('submit', function(event) {
+    document.getElementById('registerForm').addEventListener('submit', async function(event) {
       event.preventDefault();
+
+      if (!csrfToken) {
+        await fetchCsrfToken(); // 確保 CSRF Token 先取得
+      }
+
       fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
@@ -43,15 +48,20 @@
           username: document.getElementById('registerUsername').value,
           password: document.getElementById('registerPassword').value
         })
-      }).then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert('註冊成功，請登入');
-            window.location.href = '/login';
-          } else {
-            alert(data.error || '註冊失敗');
-          }
-        });
+      })
+      .then(response => response.json().then(data => ({ status: response.status, data })))
+      .then(({ status, data }) => {
+        if (status === 200 && data.success) {
+          alert('註冊成功，請登入');
+          window.location.href = '/login';
+        } else {
+          alert(data.message || '註冊失敗');
+        }
+      })
+      .catch(error => {
+        console.error('註冊錯誤:', error);
+        alert('請檢查輸入內容');
+      });
     });
   </script>
 </body>
