@@ -9,10 +9,10 @@ class MessageController extends Controller {
     let data = []
 
     try {
-      const messages = await ctx.model.Message.findAll({ order: [[ 'datetime', 'DESC' ]] })
+      const messageList = await ctx.model.Message.findAll({ order: [[ 'datetime', 'DESC' ]] })
       success = true
       message = '留言列表取得成功'
-      data = messages.map(msg => ({
+      data = messageList.map(msg => ({
         id: msg.id,
         username: msg.username,
         text: msg.text,
