@@ -1,4 +1,4 @@
-const { Controller } = require('egg')
+import { Controller } from 'egg'
 
 class AuthController extends Controller {
 
@@ -15,4 +15,4 @@ class AuthController extends Controller {
   }
 }
 
-module.exports = AuthController
+export default AuthController

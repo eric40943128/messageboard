@@ -1,7 +1,7 @@
 /**
  * @param {Egg.Application} app - egg application
  */
-module.exports = app => {
+export default app => {
   const { router, controller } = app
 
   // 首頁顯示留言板

@@ -1,5 +1,5 @@
-const { Controller } = require('egg')
-const moment = require('moment')
+import { Controller } from 'egg'
+import moment from 'moment'
 
 class MessageController extends Controller {
   async list() {
@@ -86,4 +86,4 @@ class MessageController extends Controller {
   }
 }
 
-module.exports = MessageController
+export default MessageController

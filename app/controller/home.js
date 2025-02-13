@@ -1,4 +1,4 @@
-const { Controller } = require('egg')
+import { Controller } from 'egg'
 
 class HomeController extends Controller {
   async index() {
@@ -6,4 +6,4 @@ class HomeController extends Controller {
   }
 }
 
-module.exports = HomeController
+export default HomeController

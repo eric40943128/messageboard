@@ -1,4 +1,4 @@
-module.exports = app => {
+export default app => {
   const { STRING, INTEGER, TEXT, DATE } = app.Sequelize
   const Message = app.model.define('message', {
     id: { type: INTEGER, primaryKey: true, autoIncrement: true },

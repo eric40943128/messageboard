@@ -1,4 +1,4 @@
-const { Controller } = require('egg')
+import { Controller } from 'egg'
 
 class UserController extends Controller {
   async login() {
@@ -54,4 +54,4 @@ class UserController extends Controller {
   }
 }
 
-module.exports = UserController
+export default UserController
