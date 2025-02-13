@@ -4,85 +4,117 @@ import moment from 'moment'
 class MessageController extends Controller {
   async list() {
     const { ctx } = this
-    const messages = await ctx.model.Message.findAll({ order: [[ 'datetime', 'DESC' ]] })
-    ctx.body = messages.map(msg => ({
-      id: msg.id,
-      username: msg.username,
-      text: msg.text,
-      datetime: moment(msg.datetime).utcOffset(8).format('YYYY-MM-DD HH:mm:ss'),
-    }))
+    let success = false
+    let message = '無法取得留言'
+    let data = []
+
+    try {
+      const messages = await ctx.model.Message.findAll({ order: [[ 'datetime', 'DESC' ]] })
+      success = true
+      message = '留言列表取得成功'
+      data = messages.map(msg => ({
+        id: msg.id,
+        username: msg.username,
+        text: msg.text,
+        datetime: moment(msg.datetime).utcOffset(8).format('YYYY-MM-DD HH:mm:ss'),
+      }))
+    } catch (error) {
+      ctx.status = 500
+    }
+
+    ctx.body = { success, message, data }
   }
 
   async create() {
     const { ctx } = this
+    let success = false
+    let message = '留言發表失敗'
+    let status = 400
+
     if (!ctx.session.user && !ctx.session.admin) {
-      ctx.status = 401
-      ctx.body = { error: '請先登入' }
+      message = '請先登入'
+      status = 401
+    } else {
+      const { text } = ctx.request.body
+      const username = ctx.session.admin ? 'admin' : ctx.session.user
 
-      return
+      if (!username || !text || text.trim() === '') {
+        message = '留言內容不能為空'
+      } else {
+        await ctx.model.Message.create({ username, text, datetime: new Date() })
+        success = true
+        message = '留言發表成功'
+        status = 201
+      }
     }
 
-    const { text } = ctx.request.body
-    const username = ctx.session.admin ? 'admin' : ctx.session.user // ✅ 如果是管理員，強制設定 `admin`
-
-    if (!username || !text || text.trim() === '') {
-      ctx.status = 400
-      ctx.body = { error: '留言內容不能為空' }
-
-      return
-    }
-
-    await ctx.model.Message.create({ username, text, datetime: new Date() })
-    ctx.body = { success: true, message: '留言發表成功' }
+    ctx.status = status
+    ctx.body = { success, message }
   }
 
-  // 修改留言（使用者只能修改自己的留言，管理員可修改所有留言）
   async update() {
     const { ctx } = this
+    let success = false
+    let message = '留言更新失敗'
+    let status = 400
+
     const { text } = ctx.request.body
     const commentId = ctx.params.id
 
-    const comment = await ctx.model.Message.findByPk(commentId)
-    if (!comment) {
-      ctx.status = 404
-      ctx.body = { error: '留言不存在' }
+    try {
+      const comment = await ctx.model.Message.findByPk(commentId)
 
-      return
+      if (!comment) {
+        message = '留言不存在'
+        status = 404
+      } else if (ctx.session.admin || ctx.session.user === comment.username) {
+        comment.text = text
+        comment.datetime = new Date()
+        await comment.save()
+        success = true
+        message = '留言已更新'
+        status = 200
+      } else {
+        message = '您沒有權限修改此留言'
+        status = 403
+      }
+    } catch (error) {
+      status = 500
     }
 
-    // 允許管理員修改所有留言，或使用者只能修改自己的留言
-    if (ctx.session.admin || ctx.session.user === comment.username) {
-      comment.text = text
-      comment.datetime = new Date()
-      await comment.save()
-      ctx.body = { success: true, message: '留言已更新' }
-    } else {
-      ctx.status = 403
-      ctx.body = { error: '您沒有權限修改此留言' }
-    }
+    ctx.status = status
+    ctx.body = { success, message }
   }
 
-  // 刪除留言（使用者只能刪除自己的留言，管理員可刪除所有留言）
   async delete() {
     const { ctx } = this
+    let success = false
+    let message = '留言刪除失敗'
+    let status = 400
+
     const commentId = ctx.params.id
 
-    const comment = await ctx.model.Message.findByPk(commentId)
-    if (!comment) {
-      ctx.status = 404
-      ctx.body = { error: '留言不存在' }
+    try {
+      const comment = await ctx.model.Message.findByPk(commentId)
 
-      return
+      if (!comment) {
+        message = '留言不存在'
+        status = 404
+      } else if (ctx.session.admin || ctx.session.user === comment.username) {
+        await comment.destroy()
+        success = true
+        message = '留言已刪除'
+        status = 200
+      } else {
+        message = '您沒有權限刪除此留言'
+        status = 403
+      }
+    } catch (error) {
+      status = 500
     }
 
-    // 允許管理員刪除所有留言，或使用者只能刪除自己的留言
-    if (ctx.session.admin || ctx.session.user === comment.username) {
-      await comment.destroy()
-      ctx.body = { success: true, message: '留言已刪除' }
-    } else {
-      ctx.status = 403
-      ctx.body = { error: '您沒有權限刪除此留言' }
-    }
+    ctx.status = status
+    ctx.body = { success, message }
   }
 }
 

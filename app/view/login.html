@@ -38,22 +38,34 @@
     // 使用者登入
     document.getElementById('userLoginForm').addEventListener('submit', function(event) {
       event.preventDefault();
+
       fetch('/api/login', {
         method: 'POST',
+        credentials: 'include', // 確保瀏覽器附帶 Cookie
         headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
         body: JSON.stringify({
           username: document.getElementById('userLoginUsername').value,
           password: document.getElementById('userLoginPassword').value
         })
-      }).then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert('使用者登入成功');
-            window.location.href = '/';
-          } else {
-            alert('登入失敗，請檢查帳號或密碼');
-          }
-        });
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('帳號或密碼錯誤');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          alert('使用者登入成功');
+          window.location.href = '/';
+        } else {
+          alert(data.message || '登入失敗，請檢查帳號或密碼');
+        }
+      })
+      .catch(error => {
+        console.error('登入錯誤:', error);
+        alert(error.message);
+      });
     });
 
     // 點擊註冊後，跳轉至register.html
