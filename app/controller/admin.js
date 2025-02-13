@@ -11,7 +11,9 @@ class AdminController extends Controller {
 
     if (password === 'admin123') {
       ctx.session.admin = true
-      if (!ctx.session.user) ctx.session.user = 'admin'
+      if (!ctx.session.user) {
+        ctx.session.user = 'admin'
+      }
 
       success = true
       message = '管理員登入成功'
@@ -25,7 +27,9 @@ class AdminController extends Controller {
   async logout() {
     const { ctx } = this
 
-    if (ctx.session.user === 'admin') ctx.session.user = null
+    if (ctx.session.user === 'admin') {
+      ctx.session.user = null
+    }
     ctx.session.admin = false
 
     ctx.body = { success: true, message: '管理員已登出' }

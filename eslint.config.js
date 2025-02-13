@@ -21,9 +21,10 @@ export default [
       semi: [ 'error', 'never' ], // 不使用分號
       'padding-line-between-statements': [
         'error',
-        { blankLine: 'always', prev: '*', next: 'return' },  // `return` 上方要空行
+        { blankLine: 'always', prev: '*', next: 'return' }, // `return` 上方要空行
       ],
-      'newline-before-return': 'off',  // function 內只有一行 return 不用空行
+      'newline-before-return': 'off', // function 內只有一行 return 不用空行
+      curly: [ 'error', 'all' ], // 強制所有 `if`、`else`、`for`、`while` 需要 `{}`
     },
   },
 ]
