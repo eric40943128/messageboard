@@ -1,4 +1,4 @@
-const { Controller } = require('egg')
+import { Controller } from 'egg'
 
 class CsrfController extends Controller {
   async getToken() {
@@ -9,4 +9,4 @@ class CsrfController extends Controller {
   }
 }
 
-module.exports = CsrfController
+export default CsrfController
